@@ -1,0 +1,65 @@
+\part{Encryption}
+
+\textbf{Symmetric-key encryption} uses the same key $k$ for encryption and decryption.
+
+Any plaintext $x$ that is encrypted to produce a ciphertext $c = E_k(x)$ must also be decryptable to recover the plaintext $D_k(E_k(x)) = x$ --- (\textbf{correctness}).
+
+It must also be difficult or impossible to derive useful information of the key or the plaintext from the ciphertext --- (\textbf{security}).
+
+\begin{defn}{attack models: information}
+    Given access to an \textbf{oracle} with varying levels of information, adversaries can conduct several models of attack:
+
+    \begin{itemize}
+        \keyitem{ciphertext only (COA)}{only ciphertexts and properties of the plaintext are known}
+        \keyitem{known-plaintext (KPA)}{ciphertexts of corresponding plaintexts are known}
+        \keyitem{chosen-plaintext (CPA)}{ciphertexts can be derived from arbitrary \\ plaintexts}
+        \keyitem{chosen-ciphertext (CCA2)}{plaintexts can be derived from arbitrary \\ ciphertexts}
+    \end{itemize}
+\end{defn}
+
+\begin{defn}{attack models: goals}
+    Adversaries may have varying goals:
+    \begin{itemize}
+        \keyitem*{total break}{find the encryption key}
+        \keyitem*{partial break}{decrypt a ciphertext or obtain information about a plaintext}
+        \keyitem*{indistinguishability}{distinguish ciphertexts of different plaintexts better than random chance}
+    \end{itemize}
+\end{defn}
+
+\section{Classical Ciphers}
+
+\begin{defn}{substitution cipher}
+    Construct a \textbf{substitution table} used as the key from some permutation of all possible characters used in the plaintext.
+
+    Replace each character in the plaintext with the corresponding character in the substitution table to produce the ciphertext.
+
+    Substitution ciphers are vulnerable to various attack models:
+    \begin{itemize}
+        \keyitem*{general}{brute-force exhaustive search on all keys}
+        \keyitem*{KPA}{substitution table reconstruction by \\ comparison of characters}
+        \keyitem*{COA}{frequency analysis of characters between ciphertext and plaintext}
+    \end{itemize}
+\end{defn}
+
+\begin{defn}{permutation ciphers}
+    Group characters of the plaintext into blocks of equal size, then rearrange the characters in each block according to a permutation key.
+
+    Extremely vulnerable under KPA and COA attacks as the permutation key can be easily reconstructed, especially if the plaintext language is known.
+\end{defn}
+
+Note that applying substitution or permutation ciphers several times alone in succession is equivalent to applying it once --- the ciphertext is not any more secure!
+
+\begin{defn}{one-time pad}
+    Generate a key of equal bit length as the plaintext, then \code{XOR} them together to encrypt. \code{XOR} the ciphertext with the key to decrypt:
+
+    \textbf{correctness}:
+    \begin{enumerate}
+        \item c = x \code{XOR} k
+        \item (x \code{XOR} k) \code{XOR} k = x \code{XOR} (k \code{XOR} k) = x \code{XOR} 0 = x
+    \end{enumerate}
+
+    \textbf{security}:
+    Even if an adversary obtains a ciphertext-plaintext pair and derives the key (trivial), the key is useless as it is not re-used.
+\end{defn}
+
+Exhaustive search does not work on OTPs because no meaningful information about the plaintext can be learnt (\textbf{perfect secrecy}) --- every decrypted plaintext is equally probable.
