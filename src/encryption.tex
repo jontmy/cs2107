@@ -1,4 +1,4 @@
-\part{Encryption}
+\section{Encryption}
 
 \textbf{Symmetric-key encryption} uses the same key $k$ for encryption and decryption.
 
@@ -26,7 +26,7 @@ It must also be difficult or impossible to derive useful information of the key 
     \end{itemize}
 \end{defn}
 
-\section{Classical Ciphers}
+\subsection{Classical Ciphers}
 
 \begin{defn}{substitution cipher}
     Construct a \textbf{substitution table} used as the key from some permutation of all possible characters used in the plaintext.
@@ -63,3 +63,99 @@ Note that applying substitution or permutation ciphers several times alone in su
 \end{defn}
 
 Exhaustive search does not work on OTPs because no meaningful information about the plaintext can be learnt (\textbf{perfect secrecy}) --- every decrypted plaintext is equally probable.
+
+\subsection{Modern Ciphers}
+\textbf{DES} (data encryption standard) has a key length of 56 bits, and as such is vulnerable to exhaustive search today.
+
+\textbf{AES} (advanced encryption standard) has a block length of 128 bits, and a key length of 128, 192, or 256 bits.
+
+Both DES and AES are \textbf{block ciphers} which inputs and outputs of fixed length. This means plaintext must be padded and divided into blocks before encryption.
+
+There are several methods of extending an encryption from single to mutiple blocks.
+
+\begin{defn}{ECB (electronic code book) mode}
+    Encrypt each block independently, then concatenate the ciphertexts.
+
+    If the encryption scheme is \textit{deterministic}, then any two blocks of plaintext encrypts to the same ciphertext, which leaks information.
+\end{defn}
+
+AES is inherently deterministic, and as such requires an \textbf{initialization vector (IV)} for probabilistic encryption.
+
+An IV is an arbitrary plaintext value (i.e. not secret) that should be unique for each encryption:
+
+\begin{enumerate}
+    \item Let $X$ and $Y$ be two different plaintexts, $U$ and $V$ their ciphertexts, and $K$ the IV.
+    \item $U \oplus V = (X \oplus K) \oplus (Y \oplus K)$.
+    \item By associativity and commutativity, $U \oplus V = (X \oplus Y) \oplus (K \oplus K) = X \oplus Y$.
+    \item $X \oplus Y$ can leak information.
+    \item Hence, we need a unique IV for each encryption.
+\end{enumerate}
+
+The IV is also needed for decryption and as such is sent together with the ciphertext.
+
+\begin{defn}{CBC (cipher block chaining) mode}
+    \code{XOR} the first block with the IV, then encrypt it.
+
+    Subsequent blocks are \code{XOR}'d with the previous ciphertext block before encryption.
+\end{defn}
+
+\begin{defn}{CTR (counter) mode}
+    Generate a cryptographically-secure pseudo-\\random sequence from the secret key and IV \textit{and then} encrypt it (not the plaintext).
+
+    Plaintext blocks can be streamed in are \code{XOR}'d with the encrypted sequence (\textbf{stream cipher}).
+
+    Decryption uses the same process.
+\end{defn}
+
+\subsection{Attacks}
+
+\begin{defn}{meet-in-the-middle attack (MITM) ($\in$ KPA)}
+    Suppose we apply DES twice sequentially using keys $K_1$ and $K_2$to encrypt a plaintext $p$ into ciphertext $c = E_{K_2}(E_{K_1}(p))$.
+
+    Recall that in a KPA, an adversary aiming for a total break wants to find $K_1$ and $K_2$ given $c$ and $p$.
+
+    Define the intermediate encryption value $x = E_{K_1}(p)$.
+    For decryption, we also have $x' = D_{K_2}(c)$.
+
+    Now, the adversary can pre-compute and store all $2^{56}$ possible values of $x$ and all $2^{56}$ possible values of $x'$ in two hash tables.
+
+    With $2^{57}$ possible pairs of $(x, x')$, exhaustive search will yield the keys $K_1$ and $K_2$.
+
+    Hence, instead of the expected key strength of $2 \times 56 = 112$, by trading space for time, the key strength is only $57$.
+\end{defn}
+
+Any sequential encryption scheme is vulnerable to MITM.
+
+Since MITM only reduces key strength, it can be remedied by increasing the number of rounds in the encryption scheme, e.g. \textbf{triple DES} (3DES).
+
+\begin{defn}{padding oracle attack ($\in$ CCA2)}
+    Suppose AES CBC with \textbf{PKCS\#7 padding} is used to encrypt a plaintext $p$ into ciphertext $c$ with 3 blocks of size of 4 bytes, giving a total of 12 bytes.
+
+    \begin{defn}{PKCS\#7 padding}
+        If a plaintext does not have a length that is exactly a multiple of the block size, let $l$ be the number of bytes needed to fill (pad) the last block.
+
+        The last $l$ bytes of the plaintext are set to $l$.
+
+        Otherwise, an additional block is added with all bytes set to 0.
+    \end{defn}
+
+    An adversary wants a partial break, i.e. decrypt $c$ to get $p$, with access to a \textbf{padding oracle} which returns \code{true} if the padding is valid, and \code{false} otherwise.
+
+    To decrypt AES CBC, each block of $c$ is first decrypted with the key, then \code{XOR}'d with the previous block (or the IV for the first block).
+
+    This means that a change in any byte of $c$, say $c_8$, will result in a different value for the plaintext byte in the same position of that and every subsequent block, i.e. $p_8$ and $p_{12}$.
+
+    Therefore, by exhausting all 256 possible values of $c_8$, the padding oracle will return \code{true} for the one correct value of $p'_{12} = D_{k}(c_{12}) \oplus c'_8$.
+
+    Since $p'_{12} = p_{12} \oplus c_8 \oplus c'_8$, \textit{and} the values of $p'_{12}$, $c_8$ and $c'_8$ are known, $p_{12} = p'_{12} \oplus c_8 \oplus c'_{8}$!
+
+    \begin{defn}{forcing a specific value $x$ for $p'_i$}
+        To proceed further with the attack on $p_{11}$ via $c_7$, we need to force the value of $p'_{12}$ to be \code{0x2}, so that we can brute-force $c'_7$ to get $p'_{11}$ to be \code{0x2}.
+
+        Hence, we want a value for $c''_8$ which achieves this, which is $c_8 \oplus p_{12} \oplus x$, where $x = \code{0x02}$.
+    \end{defn}
+
+    We can repeat this process for $p_{11}$ after setting $c_8 = c''_8$, and so on, truncating $c$ so that the padding does not exceed one block.
+\end{defn}
+
+Any encryption scheme using CBC is vulnerable to the padding oracle attack, and so is CTR if it uses padding.
