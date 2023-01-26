@@ -1,0 +1,83 @@
+\textbf{Authentication} is the process of assuring that a communicating entity or the origin of a piece of information is that which it claims to be.
+
+Authenticity implies integrity.
+
+\section{Passwords}
+Passwords are secrets shared between two entities, but unlike secret keys, passwords are human-generated and memorizable.
+
+\begin{defn}{bootstrapping}
+    The establishment of a user's password with a server, stored in a file together with their identity.
+
+    A user can choose a password and send it to the server, or, the server can choose a default password. A secure communication channel is required.
+\end{defn}
+
+\begin{defn}{authentication}
+    Password verification can take place \textit{interactively} where the user is prompted for their password, or \textit{non-interactively} where the password is sent to the server in plaintext.
+
+    Access is granted if an only if the password is correct.
+\end{defn}
+
+However, weak authentication methods are vulnerable to \textbf{replay attacks} where an attacker can sniff information from the channel and replay it to impersonate the user.
+
+\begin{defn}{password reset}
+    Systems typically link an account to a recovery email address, allowing the user to reset their password via a link containing a one-time-password (OTP).
+
+    Ownership of the email address proves the entity is authentic, as this is 2FA.
+\end{defn}
+
+\subsection{Attacks}
+Default password stealing or password interception (e.g. mail) can occur during bootstrapping.
+
+Passwords can also be stolen by \textbf{shoulder-surfing}, \textbf{sniffing} over unecrypted networks, \textbf{keylogging}, \textbf{phishing} (social engineering, including spear-phishing), \textbf{cache-exploitation}, or \textbf{insider attacks}.
+
+Regular training, phishing exercises, and blacklisting of known phishing sites can combat phishing attacks.
+
+\begin{defn}{dictionary attacks}
+    Dictionary attacks are a brute-force attack where an attacker uses a pre-selected collection of phrases to guess the password.
+
+    During an \textbf{online dictionary attack}, the attacker must interact with the authentication server, which acts an oracle.
+
+    Severs can combat this by limiting the number of attempts or introducing delays between attempts.
+
+    In an \textbf{offline dictionary attack}, the attacker has to first obtain some information about the password (e.g. an encrypted database) before searching through it without interacting with the server (e.g. a password-protected PDF).
+\end{defn}
+
+\begin{defn}{side-channel attacks}
+    Side channel attacks rely on information leaked by the system, into the environment which can be intercepted by an attacker and used to derive the password.
+
+    For example, sound and timing of keyboard presses.
+\end{defn}
+
+\subsection{\textit{n}-Factor Authentication}
+Examples of \textbf{factors}:
+\begin{enumerate}
+    \keyitem*{something you know}{password, PIN}
+    \keyitem*{something you have}{hardware token, smartphone, ATM card}
+    \keyitem*{who you are}{biometrics}
+\end{enumerate}
+
+\begin{defn}{one-time-password (OTP) tokens}
+    Some form of hardware installed with a secret key shared with the server that is used to generate an OTP for a specific and limited event (e.g. login, transaction).
+    
+    The password generation process can be either \textbf{time-based} or \textbf{sequence-based} (e.g. a counter for button presses).
+\end{defn}
+
+Because OTPs are limited in their validity, they cannot be reused and are therefore not vulnerable to replay attacks.
+
+When comparing between possible hardware, e.g. a physical token or a smartphone app, they will each have their own security trade-offs, i.e. there is no single best solution.
+
+\section{Biometrics}
+Biometrics are physical characteristics of a user, e.g. fingerprints.
+
+Unlike passwords, they can't be changed, shared, or forgotten, but they introduce a probability of \textbf{false matches} and \textbf{false non-matches}.
+
+The \textbf{false match rate} (FMR) is the probability that a false biometric capture is incorrectly accepted as belonging to a user.
+
+The \textbf{false non-match rate} (FNMR) is the probability that a genuine biometric capture is incorrectly rejected as not belonging to a user.
+
+FMR and FNMR are inversely related --- a lower threshold for accepting a biometric capture increases the FMR and decreases the FNMR, and vice versa.
+
+\subsection{Attacks}
+Biometric systems are vulnerable to \textbf{spoofing} where an attacker uses a fake biometric capture to impersonate a user.
+
+To combat this, biometric systems can use \textbf{liveness detection} where the system checks that the user is present and not an image, recording, etc..
